@@ -4,6 +4,8 @@
 **Facultad de Ingeniería en Sistemas de Información y Ciencias de la Computación**  
 **Curso:** Precálculo  
 **Catedrático:** M.A. Ing. Claudio Orazio López Calderón  
+**Estudiantes:** Jose Carlos Alfaro García 0906-26-9140, Marvin Michael González de León 0906-26-4094.
+
 
 ---
 
