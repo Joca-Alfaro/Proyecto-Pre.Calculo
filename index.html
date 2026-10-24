@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Motor FOV Raycasting 2D - Trigonometría</title>
+    <style>
+        body { margin: 0; background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 2px solid #444; background: #050505; margin-top: 10px; cursor: crosshair; }
+        .info { margin-top: 10px; width: 800px; display: flex; justify-content: space-between; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h2>Simulador de Línea de Visión (FOV 2D)</h2>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="info">
+        <span>Controles: Mueve el mouse para apuntar | WASD para moverte</span>
+        <span id="status">Calculando...</span>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Configuración del Jugador
+const player = {
+    x: 400,
+    y: 300,
+    angle: 0,        // Grados
+    fov: 60,         // Apertura en grados
+    numRays: 120,    // Cantidad de rayos trigonométricos
+    maxDist: 350
+};
+
+// Obstáculos en el mundo
+const walls = [
+    {x: 150, y: 100, w: 100, h: 150},
+    {x: 500, y: 150, w: 150, h: 80},
+    {x: 300, y: 400, w: 200, h: 100}
+];
+
+// Detección de movimiento
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Apuntado con el mouse mediante Arcotangente (Trigonometría Inversa)
+canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Cálculo de catetos hacia la posición del mouse
+    const dx = mouseX - player.x;
+    const dy = mouseY - player.y;
+    
+    // Conversión de arcotangente2 (radianes a grados)
+    player.angle = Math.atan2(dy, dx) * (180 / Math.PI);
+});
+
+// Función de conversión sexagesimal a radianes
+function degToRad(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+// Comprobación de colisión punto-obstáculo
+function isColliding(x, y) {
+    if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) return true;
+    for (let w of walls) {
+        if (x >= w.x && x <= w.x + w.w && y >= w.y && y <= w.y + w.h) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Ciclo Principal de Renderizado
+function update() {
+    // Movimiento básico
+    if (keys['w']) player.y -= 3;
+    if (keys['s']) player.y += 3;
+    if (keys['a']) player.x -= 3;
+    if (keys['d']) player.x += 3;
+
+    // Limpieza de pantalla
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dibujar obstáculos
+    ctx.fillStyle = '#334455';
+    walls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+
+    // LÓGICA DE RAYCASTING TRIGONOMÉTRICO
+    const rayPoints = [];
+    const halfFOV = player.fov / 2;
+    const startAngle = player.angle - halfFOV;
+    const angleStep = player.fov / player.numRays;
+
+    for (let i = 0; i <= player.numRays; i++) {
+        const currentAngleDeg = startAngle + (i * angleStep);
+        const rad = degToRad(currentAngleDeg);
+        
+        // Proyección incremental mediante Catetos: dx = cos(rad), dy = sin(rad)
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        
+        let rayX = player.x;
+        let rayY = player.y;
+        let dist = 0;
+        const stepSize = 2;
+
+        while (dist < player.maxDist) {
+            rayX += cos * stepSize;
+            rayY += sin * stepSize;
+            dist += stepSize;
+
+            if (isColliding(rayX, rayY)) break;
+        }
+        rayPoints.push({x: rayX, y: rayY});
+    }
+
+    // Dibujar el Polígono de Luz (Campo de Visión)
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    rayPoints.forEach(pt => ctx.lineTo(pt.x, pt.y));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 230, 150, 0.35)';
+    ctx.fill();
+
+    // Dibujar Líneas de Rayos individuales
+    ctx.strokeStyle = 'rgba(255, 200, 50, 0.15)';
+    ctx.beginPath();
+    rayPoints.forEach(pt => {
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.stroke();
+
+    // Dibujar Jugador
+    ctx.fillStyle = '#ff4444';
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    document.getElementById('status').innerText = 
+        `Pos: (${Math.round(player.x)}, ${Math.round(player.y)}) | Ángulo: ${Math.round(player.angle)}°`;
+
+    requestAnimationFrame(update);
+}
+
+update();
+</script>
+</body>
+</html>
