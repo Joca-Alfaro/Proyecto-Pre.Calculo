@@ -11,7 +11,7 @@
 
 Este proyecto es una aplicación web interactiva desarrollada en **HTML5 Canvas** y **JavaScript vanilla** que modela el comportamiento de la luz y el campo de visión de un observador en un plano bidimensional.
 
-El sistema aplica conceptos de precálculo, tales como **trigonometría analítica, coordenadas polares, funciones inversas ($\operatorname{atan2}$) y resolución de triángulos**, para calcular y renderizar en tiempo real el haz de visión proyectado sobre un mapa con obstáculos rígidos.
+El sistema aplica conceptos de precálculo, tales como **trigonometría analítica, coordenadas polares, funciones inversas (`atan2`) y resolución de triángulos**, para calcular y renderizar en tiempo real el haz de visión proyectado sobre un mapa con obstáculos rígidos.
 
 ---
 
@@ -36,12 +36,15 @@ El sistema aplica conceptos de precálculo, tales como **trigonometría analíti
 ## 📐 Fundamento Matemático Incorporado
 
 1. **Cálculo de Ángulo de Mirada:**
-   $$\theta = \operatorname{atan2}(\Delta y, \Delta x)$$
+   $$\theta = \text{atan2}(\Delta y, \Delta x)$$
+
 2. **Conversión Angular:**
    $$\text{Radianes} = \text{Grados} \times \frac{\pi}{180}$$
+
 3. **Proyección del Rayo (Avance Paramétrico):**
    $$x_{r} = x_{p} + d \cdot \cos(\theta)$$
    $$y_{r} = y_{p} + d \cdot \sin(\theta)$$
+
 4. **Relación Pitagórica:**
    $$d = \sqrt{\Delta x^2 + \Delta y^2}$$
 
@@ -51,7 +54,7 @@ El sistema aplica conceptos de precálculo, tales como **trigonometría analíti
 
 1. Descarga o clona este repositorio.
 2. Abre el archivo `index.html` en cualquier navegador web moderno (Google Chrome, Mozilla Firefox, Microsoft Edge, Safari).
-3. No se requiere instalación de dependencias ni servidores locales (Node.js/Python).
+3. No se requiere instalación de dependencias ni servidores locales.
 
 ### Controles
 - **Mover el cursor:** Orienta la dirección de la linterna / campo de visión.
