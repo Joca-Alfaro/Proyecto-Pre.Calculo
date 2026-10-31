@@ -26,7 +26,7 @@ const jugador = {
     x: 400,
     y: 300,
     angulo: 0,          // Grados
-    campoVision: 60,    // Apertura del cono de visión (FOV en grados)
+    campoVision: 200,    // Apertura del cono de visión (FOV en grados)
     numRayos: 120,      // Cantidad de rayos trigonométricos
     distMax: 350        // Alcance máximo de la linterna en píxeles
 };
@@ -76,10 +76,10 @@ function hayColision(x, y) {
 // Ciclo Principal de Renderizado
 function actualizar() {
     // Movimiento básico con teclas WASD
-    if (teclas['w']) jugador.y -= 3;
-    if (teclas['s']) jugador.y += 3;
-    if (teclas['a']) jugador.x -= 3;
-    if (teclas['d']) jugador.x += 3;
+    if (teclas['w']) jugador.y -= 1;
+    if (teclas['s']) jugador.y += 1;
+    if (teclas['a']) jugador.x -= 1;
+    if (teclas['d']) jugador.x += 1;
 
     // Limpieza de pantalla
     ctx.clearRect(0, 0, CajaCanvasJs.width, CajaCanvasJs.height);
