@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Motor FOV Raycasting 2D - Trigonometría</title>
+    <title>Motor 2D - Trigonometría</title>
     <style>
         body { margin: 0; background-color: #1a1a1a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
         canvas { border: 2px solid #444; background: #050505; margin-top: 10px; cursor: crosshair; }
@@ -10,63 +10,63 @@
     </style>
 </head>
 <body>
-    <h2>Simulador de Línea de Visión (FOV 2D)</h2>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <h2>Simulador de Línea de Visión (CAMPO DE VISÓN 2D)</h2>
+    <canvas id="CajaCanvas" width="800" height="600"></canvas>
     <div class="info">
         <span>Controles: Mueve el mouse para apuntar | WASD para moverte</span>
-        <span id="status">Calculando...</span>
+        <span id="estado">Calculando...</span>
     </div>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const CajaCanvasJs = document.getElementById('CajaCanvas');
+const ctx = CajaCanvasJs.getContext('2d');
 
 // Configuración del Jugador
-const player = {
+const jugador = {
     x: 400,
     y: 300,
-    angle: 0,        // Grados
-    fov: 60,         // Apertura en grados
-    numRays: 120,    // Cantidad de rayos trigonométricos
-    maxDist: 350
+    angulo: 0,          // Grados
+    campoVision: 60,    // Apertura del cono de visión (FOV en grados)
+    numRayos: 120,      // Cantidad de rayos trigonométricos
+    distMax: 350        // Alcance máximo de la linterna en píxeles
 };
 
-// Obstáculos en el mundo
-const walls = [
-    {x: 150, y: 100, w: 100, h: 150},
-    {x: 500, y: 150, w: 150, h: 80},
-    {x: 300, y: 400, w: 200, h: 100}
+// Obstáculos en el mundo (paredes)
+const paredes = [
+    { x: 150, y: 100, ancho: 100, alto: 150 },
+    { x: 500, y: 150, ancho: 150, alto: 80 },
+    { x: 300, y: 400, ancho: 200, alto: 100 }
 ];
 
-// Detección de movimiento
-const keys = {};
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+// Detección de movimiento por teclado
+const teclas = {};
+window.addEventListener('keydown', e => teclas[e.key.toLowerCase()  ] = true);
+window.addEventListener('keyup', e => teclas[e.key.toLowerCase()] = false);
 
 // Apuntado con el mouse mediante Arcotangente (Trigonometría Inversa)
-canvas.addEventListener('mousemove', e => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+CajaCanvasJs.addEventListener('mousemove', e => {
+    const rectangulo = CajaCanvasJs.getBoundingClientRect();
+    const mouseX = e.clientX - rectangulo.left;
+    const mouseY = e.clientY - rectangulo.top;
     
     // Cálculo de catetos hacia la posición del mouse
-    const dx = mouseX - player.x;
-    const dy = mouseY - player.y;
+    const distanciaX = mouseX - jugador.x;
+    const distanciaY = mouseY - jugador.y;
     
     // Conversión de arcotangente2 (radianes a grados)
-    player.angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    jugador.angulo = Math.atan2(distanciaY, distanciaX) * (180 / Math.PI);
 });
 
-// Función de conversión sexagesimal a radianes
-function degToRad(degrees) {
-    return degrees * (Math.PI / 180);
+// Función de conversión de grados sexagesimales a radianes
+function gradosARadianes(grados) {
+    return grados * (Math.PI / 180);
 }
 
-// Comprobación de colisión punto-obstáculo
-function isColliding(x, y) {
-    if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) return true;
-    for (let w of walls) {
-        if (x >= w.x && x <= w.x + w.w && y >= w.y && y <= w.y + w.h) {
+// Comprobación de colisión entre un punto y las paredes del mundo
+function hayColision(x, y) {
+    if (x < 0 || x > CajaCanvasJs.width || y < 0 || y > CajaCanvasJs.height) return true;
+    for (let pared of paredes) {
+        if (x >= pared.x && x <= pared.x + pared.ancho && y >= pared.y && y <= pared.y + pared.alto) {
             return true;
         }
     }
@@ -74,53 +74,53 @@ function isColliding(x, y) {
 }
 
 // Ciclo Principal de Renderizado
-function update() {
-    // Movimiento básico
-    if (keys['w']) player.y -= 3;
-    if (keys['s']) player.y += 3;
-    if (keys['a']) player.x -= 3;
-    if (keys['d']) player.x += 3;
+function actualizar() {
+    // Movimiento básico con teclas WASD
+    if (teclas['w']) jugador.y -= 3;
+    if (teclas['s']) jugador.y += 3;
+    if (teclas['a']) jugador.x -= 3;
+    if (teclas['d']) jugador.x += 3;
 
     // Limpieza de pantalla
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, CajaCanvasJs.width, CajaCanvasJs.height);
 
-    // Dibujar obstáculos
+    // Dibujar obstáculos (paredes)
     ctx.fillStyle = '#334455';
-    walls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+    paredes.forEach(pared => ctx.fillRect(pared.x, pared.y, pared.ancho, pared.alto));
 
     // LÓGICA DE RAYCASTING TRIGONOMÉTRICO
-    const rayPoints = [];
-    const halfFOV = player.fov / 2;
-    const startAngle = player.angle - halfFOV;
-    const angleStep = player.fov / player.numRays;
+    const puntosRayos = [];
+    const mitadFOV = jugador.campoVision / 2;
+    const anguloInicio = jugador.angulo - mitadFOV;
+    const pasoAngulo = jugador.campoVision / jugador.numRayos;
 
-    for (let i = 0; i <= player.numRays; i++) {
-        const currentAngleDeg = startAngle + (i * angleStep);
-        const rad = degToRad(currentAngleDeg);
+    for (let i = 0; i <= jugador.numRayos; i++) {
+        const anguloActualGrados = anguloInicio + (i * pasoAngulo);
+        const radianes = gradosARadianes(anguloActualGrados);
         
-        // Proyección incremental mediante Catetos: dx = cos(rad), dy = sin(rad)
-        const cos = Math.cos(rad);
-        const sin = Math.sin(rad);
+        // Proyección incremental mediante Catetos: cos(rad), sen(rad)
+        const coseno = Math.cos(radianes);
+        const seno = Math.sin(radianes);
         
-        let rayX = player.x;
-        let rayY = player.y;
-        let dist = 0;
-        const stepSize = 2;
+        let rayoX = jugador.x;
+        let rayoY = jugador.y;
+        let distancia = 0;
+        const pasoTamano = 2;
 
-        while (dist < player.maxDist) {
-            rayX += cos * stepSize;
-            rayY += sin * stepSize;
-            dist += stepSize;
+        while (distancia < jugador.distMax) {
+            rayoX += coseno * pasoTamano;
+            rayoY += seno * pasoTamano;
+            distancia += pasoTamano;
 
-            if (isColliding(rayX, rayY)) break;
+            if (hayColision(rayoX, rayoY)) break;
         }
-        rayPoints.push({x: rayX, y: rayY});
+        puntosRayos.push({ x: rayoX, y: rayoY });
     }
 
     // Dibujar el Polígono de Luz (Campo de Visión)
     ctx.beginPath();
-    ctx.moveTo(player.x, player.y);
-    rayPoints.forEach(pt => ctx.lineTo(pt.x, pt.y));
+    ctx.moveTo(jugador.x, jugador.y);
+    puntosRayos.forEach(punto => ctx.lineTo(punto.x, punto.y));
     ctx.closePath();
     ctx.fillStyle = 'rgba(255, 230, 150, 0.35)';
     ctx.fill();
@@ -128,25 +128,26 @@ function update() {
     // Dibujar Líneas de Rayos individuales
     ctx.strokeStyle = 'rgba(255, 200, 50, 0.15)';
     ctx.beginPath();
-    rayPoints.forEach(pt => {
-        ctx.moveTo(player.x, player.y);
-        ctx.lineTo(pt.x, pt.y);
+    puntosRayos.forEach(punto => {
+        ctx.moveTo(jugador.x, jugador.y);
+        ctx.lineTo(punto.x, punto.y);
     });
     ctx.stroke();
 
     // Dibujar Jugador
     ctx.fillStyle = '#ff4444';
     ctx.beginPath();
-    ctx.arc(player.x, player.y, 8, 0, Math.PI * 2);
+    ctx.arc(jugador.x, jugador.y, 8, 0, Math.PI * 2);
     ctx.fill();
 
-    document.getElementById('status').innerText = 
-        `Pos: (${Math.round(player.x)}, ${Math.round(player.y)}) | Ángulo: ${Math.round(player.angle)}°`;
+    // Actualizar texto informativo de estado
+    document.getElementById('estado').innerText = 
+        `Pos: (${Math.round(jugador.x)}, ${Math.round(jugador.y)}) | Ángulo: ${Math.round(jugador.angulo)}°`;
 
-    requestAnimationFrame(update);
+    requestAnimationFrame(actualizar);
 }
 
-update();
+actualizar();
 </script>
 </body>
 </html>
